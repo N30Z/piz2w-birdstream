@@ -1,0 +1,5 @@
+# Starte Webserver beim Booten
+@reboot /usr/bin/python3 /home/pi/piz2w-birdstream/app.py &
+
+# Starte tägliche Aufnahme um Mitternacht (00:00)
+0 0 * * * /usr/bin/python3 /home/pi/piz2w-birdstream/record_and_detect.py
