@@ -1,0 +1,13 @@
+[Unit]
+Description=Birdstream VirtualCam Livestream/Control
+After=network.target
+
+[Service]
+User=captain
+WorkingDirectory=/home/captain/piz2w-birdstream/pi-zero2w
+ExecStart=/usr/bin/python3 /home/captain/piz2w-birdstream/pi-zero2w/virtualcam.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
