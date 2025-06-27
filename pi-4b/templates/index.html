@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Birdstream Webinterface</title>
+  <style>
+    body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
+    .input { margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Birdstream Pi 4B – Livestream und Zeitraffer</h1>
+
+  <h2>Livestream</h2>
+  <iframe id="livestream" width="720" height="480" frameborder="0" allowfullscreen></iframe>
+
+  <form id="settings">
+    <div class="input">
+      <label>Pi Zero IP: <input id="pi_zero_ip" name="pi_zero_ip" value="{{config.pi_zero_ip}}" /></label>
+    </div>
+    <div class="input">
+      <label>Auflösung:
+        <select id="resolution">
+          <option value="1920x1080">1080p</option>
+          <option value="1280x720" selected>720p</option>
+          <option value="640x480">480p</option>
+        </select>
+      </label>
+    </div>
+    <div class="input">
+      <label>Framerate:
+        <select id="fps">
+          <option value="15">15</option>
+          <option value="30" selected>30</option>
+          <option value="60">60</option>
+        </select>
+      </label>
+    </div>
+    <button type="submit">Übernehmen</button>
+  </form>
+
+  <h2>Zeitraffer</h2>
+  <video id="timelapse" controls width="720">
+    <source src="/static/video/2025-06-25.mp4" type="video/mp4">
+    Dein Browser unterstützt kein Video.
+  </video>
+  <canvas id="timeline" width="720" height="40" style="cursor:pointer;"></canvas>
+
+  <script>
+    // Livestream dynamisch setzen
+    let ip = "{{config.pi_zero_ip}}" || window.location.hostname;
+    document.getElementById("livestream").src = "http://" + ip + ":8081";
+
+    // Settings übernehmen
+    document.getElementById("settings").onsubmit = async (e) => {
+      e.preventDefault();
+      let res = document.getElementById("resolution").value.split("x");
+      let fps = parseInt(document.getElementById("fps").value);
+      let pi_zero_ip = document.getElementById("pi_zero_ip").value;
+      // Save config
+      await fetch("/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pi_zero_ip: pi_zero_ip,
+          width: parseInt(res[0]),
+          height: parseInt(res[1]),
+          fps: fps
+        })
+      });
+      // Sende Settings an Pi Zero
+      await fetch("/set_livestream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          width: parseInt(res[0]),
+          height: parseInt(res[1]),
+          fps: fps
+        })
+      });
+      alert("Gesendet!");
+      location.reload();
+    };
+
+    // motionData für Zeitstrahl laden (optional, Beispiel)
+    fetch("/static/motion/2025-06-25.json")
+      .then(res => res.json())
+      .then(data => {
+        const canvas = document.getElementById("timeline");
+        const ctx = canvas.getContext("2d");
+        const player = document.getElementById("timelapse");
+        function timeToSec(t) {
+          const [h, m, s] = t.split(":").map(Number);
+          return h * 3600 + m * 60 + s;
+        }
+        function drawTimeline() {
+          const duration = player.duration || 1800;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#ddd";
+          ctx.fillRect(0, 15, canvas.width, 10);
+          ctx.fillStyle = "red";
+          data.forEach(ev => {
+            const s = timeToSec(ev.start);
+            const e = timeToSec(ev.end);
+            const x = (s / duration) * canvas.width;
+            const w = ((e - s) / duration) * canvas.width;
+            ctx.fillRect(x, 10, w, 20);
+          });
+        }
+        player.onloadedmetadata = drawTimeline;
+        canvas.addEventListener("click", e => {
+          const duration = player.duration || 1800;
+          const x = e.offsetX;
+          const time = (x / canvas.width) * duration;
+          player.currentTime = time;
+          player.play();
+        });
+      });
+  </script>
+</body>
+</html>
