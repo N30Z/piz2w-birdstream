@@ -49,7 +49,7 @@
   <script>
     // Livestream dynamisch setzen
     let ip = "{{config.pi_zero_ip}}" || window.location.hostname;
-    document.getElementById("livestream").src = "http://" + ip + ":8081";
+    document.getElementById("livestream").src = "http://" + ip + ":8081/video";
 
     // Settings übernehmen
     document.getElementById("settings").onsubmit = async (e) => {
