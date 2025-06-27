@@ -1,0 +1,13 @@
+[Unit]
+Description=Birdstream Pi4B Webserver
+After=network.target
+
+[Service]
+User=captain
+WorkingDirectory=/home/captain/piz2w-birdstream/pi-4b
+ExecStart=/usr/bin/python3 /home/captain/piz2w-birdstream/pi-4b/app.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
