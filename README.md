@@ -50,7 +50,7 @@ piz2w-birdstream/
     ```
 3. **Python-Abhängigkeiten installieren:**
     ```bash
-    pip3 install -r requirements.txt
+    pip3 install flask
     ```
 4. **Service einrichten und starten:**
     ```bash
