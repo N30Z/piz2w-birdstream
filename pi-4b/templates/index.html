@@ -14,7 +14,9 @@
   <h2>Livestream</h2>
   <iframe id="livestream" width="720" height="480" frameborder="0" allowfullscreen></iframe>
 
-  <form id="settings">
+  <details style="margin:1em 0;">
+    <summary style="font-size:1.2em;cursor:pointer;">Einstellungen anzeigen/ausblenden</summary>
+    <form id="settings" style="margin-top:1em;">
     <div class="input">
       <label>Pi Zero IP: <input id="pi_zero_ip" name="pi_zero_ip" value="{{config.pi_zero_ip}}" /></label>
     </div>
@@ -36,8 +38,25 @@
         </select>
       </label>
     </div>
+      <div class="input">
+        <label>Crop (x, y, w, h):
+          <input id="crop" name="crop" type="text" value="0,0,1280,720"/>
+        </label>
+      </div>
+      <div class="input">
+        <label>Rotation:
+          <select id="rotate">
+            <option value="0">0°</option>
+            <option value="90">90°</option>
+            <option value="180">180°</option>
+            <option value="270">270°</option>
+          </select>
+        </label>
+      </div>
     <button type="submit">Übernehmen</button>
   </form>
+  </details>
+
 
   <h2>Zeitraffer</h2>
   <video id="timelapse" controls width="720">
@@ -52,35 +71,44 @@
     document.getElementById("livestream").src = "http://" + ip + ":8081/video";
 
     // Settings übernehmen
-    document.getElementById("settings").onsubmit = async (e) => {
-      e.preventDefault();
-      let res = document.getElementById("resolution").value.split("x");
-      let fps = parseInt(document.getElementById("fps").value);
-      let pi_zero_ip = document.getElementById("pi_zero_ip").value;
-      // Save config
-      await fetch("/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pi_zero_ip: pi_zero_ip,
-          width: parseInt(res[0]),
-          height: parseInt(res[1]),
-          fps: fps
-        })
-      });
-      // Sende Settings an Pi Zero
-      await fetch("/set_livestream", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          width: parseInt(res[0]),
-          height: parseInt(res[1]),
-          fps: fps
-        })
-      });
-      alert("Gesendet!");
-      location.reload();
-    };
+  document.getElementById("settings").onsubmit = async (e) => {
+    e.preventDefault();
+    let res = document.getElementById("resolution").value.split("x");
+    let fps = parseInt(document.getElementById("fps").value);
+    let pi_zero_ip = document.getElementById("pi_zero_ip").value;
+    let crop = document.getElementById("crop").value.split(",").map(Number);
+    let rotate = parseInt(document.getElementById("rotate").value);
+
+    // Save config (für den Webserver)
+    await fetch("/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pi_zero_ip: pi_zero_ip,
+        width: parseInt(res[0]),
+        height: parseInt(res[1]),
+        fps: fps,
+        crop: crop,
+        rotate: rotate
+      })
+    });
+
+    
+    // Sende Settings an Pi Zero
+    await fetch("/set_livestream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        width: parseInt(res[0]),
+        height: parseInt(res[1]),
+        fps: fps,
+        crop: crop,
+        rotate: rotate
+      })
+    });
+    alert("Gesendet!");
+    location.reload();
+  };
 
     // motionData für Zeitstrahl laden (optional, Beispiel)
     fetch("/static/motion/2025-06-25.json")

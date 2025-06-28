@@ -41,11 +41,13 @@ def set_livestream():
     pi_zero_addr = config.get("pi_zero_ip", "127.0.0.1")
     payload = request.json
     try:
-        r = requests.post(f"http://{pi_zero_addr}:5001/set", json=payload, timeout=2)
+        r = requests.post(f"http://{pi_zero_addr}:8081/set", json=payload, timeout=2)
+        r.raise_for_status()  # wirft Exception bei HTTP Fehler!
         return r.json()
     except Exception as e:
+        import traceback
+        print(traceback.format_exc())
         return jsonify({"status": "error", "msg": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8081)
