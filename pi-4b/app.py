@@ -20,9 +20,26 @@ def save_config(cfg):
 
 
 @app.route("/")
+@app.route("/index")
 def index():
     config = load_config()
     return render_template("index.html", config=config)
+
+
+@app.route("/timelaps")
+def timelaps():
+    import glob
+    import os
+    # Holen aller Tages- und Einzelvideos (z.B. MP4 und/oder JPG als Thumbnails)
+    videos = sorted(glob.glob("static/video/*.mp4"))
+    stunden = sorted(glob.glob("static/video/*-hour-*.mp4"))
+    # Gruppiere pro Tag
+    tage = {}
+    for vid in stunden:
+        tag = os.path.basename(vid).split("-hour-")[0]
+        tage.setdefault(tag, []).append(vid)
+    # Gib alles an das Template
+    return render_template("timelaps.html", tage=tage, tagesvideos=videos)
 
 
 @app.route("/config", methods=["GET", "POST"])
@@ -48,6 +65,7 @@ def set_livestream():
         import traceback
         print(traceback.format_exc())
         return jsonify({"status": "error", "msg": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8081)

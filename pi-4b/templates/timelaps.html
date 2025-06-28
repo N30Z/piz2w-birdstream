@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Birdstream Zeitraffer</title>
+    <style>
+        body { font-family: sans-serif; background: #f8f8f8; }
+        .flexrow { display: flex; gap: 2em; }
+        .navigator { width: 300px; border-right: 2px solid #ccc; padding: 1em; }
+        .main { flex: 1; padding: 1em; }
+        .kachel { margin: 0.5em 0; padding: 0.5em; background: #eee; border-radius: 6px; cursor: pointer; }
+        .sep { border-top: 2px solid #ccc; margin: 1em 0; }
+        .player { background: #fff; padding: 1em; border-radius: 8px; box-shadow: 0 2px 8px #0001;}
+    </style>
+</head>
+<body>
+<h1>Birdstream Zeitraffer</h1>
+<div class="flexrow">
+    <div class="navigator">
+        <h3>Heute – Einzelaufnahmen</h3>
+        <div id="stundenliste">
+            {% for tag, vids in tage.items() %}
+            {% if tag == today %}
+            {% for vid in vids %}
+            <div class="kachel" onclick="showVideo('{{ url_for('static', filename=vid.split('static/')[1]) }}')">
+                {{ vid.split('/')[-1] }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endfor %}
+        </div>
+        <div class="sep"></div>
+        <h3>24h-Zusammenschnitte</h3>
+        <div id="tagesvideos">
+            {% for vid in tagesvideos %}
+            <div class="kachel" onclick="showVideo('{{ url_for('static', filename=vid.split('static/')[1]) }}')">
+                {{ vid.split('/')[-1] }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="main">
+        <h2>Videoplayer</h2>
+        <div class="player">
+            <video controls height="405" id="video" width="720">
+                <source src="" type="video/mp4">
+            </video>
+            <br>
+            <!-- Hier kannst du optional die Timeline / Bewegungserkennung etc. einbauen -->
+            <canvas height="40" id="timeline" width="720"></canvas>
+        </div>
+    </div>
+</div>
+<script>
+    function showVideo(src) {
+      document.getElementById('video').src = src;
+      document.getElementById('video').load();
+    }
+</script>
+</body>
+</html>
